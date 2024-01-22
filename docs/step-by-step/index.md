@@ -159,3 +159,98 @@ import HelloWorld from './components/HelloWorld.vue';
 import HelloWorld from '@/components/HelloWorld.vue';
 ```
 
+# 5 环境变量
+
+> see：https://cn.vitejs.dev/guide/env-and-mode.html
+
+# 5.1 文件命名格式
+
+```properties
+.env                # 所有情况下都会加载
+.env.local          # 所有情况下都会加载，但会被 git 忽略
+.env.[mode]         # 只在指定模式下加载
+.env.[mode].local   # 只在指定模式下加载，但会被 git 忽略
+```
+
+## 5.2 配置
+
+- 开发环境：`/.env.dev`
+
+```properties
+# /.env.dev
+# 新建 
+# 开发环境
+
+# 自定义变量，必须以VITE_开头
+VITE_APP_TITLE = 'coo-vue3-element-admin'
+VITE_HTTP_API_BASE_URL = 'http://localhost:8080/dev'
+```
+
+- 生产环境：`/.env.prod`
+
+```properties
+# /.env.prod
+# 新建 
+# 正式环境
+
+# 自定义变量，必须以VITE_开头
+VITE_APP_TITLE = 'coo-vue3-element-admin'
+VITE_HTTP_API_BASE_URL = 'http://localhost:8080/prod'
+```
+
+- 测试环境：`/.env.test`
+
+```properties
+# /.env.test
+# 新建 
+# 测试环境
+
+# 自定义变量，必须以VITE_开头
+VITE_APP_TITLE = 'coo-vue3-element-admin'
+VITE_HTTP_API_BASE_URL = 'http://localhost:8080/test'
+```
+
+## 5.3 IDE自动提示
+
+```typescript
+// /env.d.ts
+// 添加
+
+// 环境变量类型
+interface ImportMetaEnv {
+  VITE_APP_TITLE: string;
+  VITE_HTTP_API_BASE_URL: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+```
+
+## 5.4 package.json
+
+```json
+// package.json
+// 添加
+
+{
+    "scripts": {
+        "dev": "vite --mode dev",
+        "test": "vite --mode test",
+        "prod": "vite --mode prod",
+        "build-only": "vite build --mode prod",
+    }
+}
+```
+
+## 5.5 环境启动
+
+```shell
+pnpm dev      # 开发环境
+pnpm test     # 测试环境
+pnpm prod     # 正式环境
+```
+
+## 5.6 IDE示例
+
+![](https://czmdi.cooperzhu.com/technology/vue/vue3-element-plushuan-jing-da-jian-step-by-step/5-6_1.svg)
