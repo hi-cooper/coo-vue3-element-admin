@@ -121,3 +121,41 @@ node_modules
 .local
 # /**/*.d.ts
 ```
+
+# 4 路由别名
+
+> 使用vue模板创建项目时，已默认安装和配置好`@types/node`，所以可以直接使用
+
+- tsconfig.app.json
+
+```json
+// /tsconfig.app.json
+// 替换
+
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+
+                        ↓
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  }
+}
+```
+
+- 示例
+
+```typescript
+// App.vue
+import HelloWorld from './components/HelloWorld.vue';
+                        ↓
+import HelloWorld from '@/components/HelloWorld.vue';
+```
+
