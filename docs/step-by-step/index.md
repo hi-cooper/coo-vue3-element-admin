@@ -254,3 +254,65 @@ pnpm prod     # 正式环境
 ## 5.6 IDE示例
 
 ![](https://czmdi.cooperzhu.com/technology/vue/vue3-element-plushuan-jing-da-jian-step-by-step/5-6_1.svg)
+
+# 6 element-plus
+
+> see: https://element-plus.org/zh-CN/
+
+## 6.1 安装
+
+```shell
+pnpm add element-plus
+pnpm add @element-plus/icons-vue # element icons
+```
+
+## 6.2 配置
+
+- ComponetService.ts
+
+```typescript
+// /src/components/ComponetService.ts
+// 新建
+
+import type { App } from 'vue';
+import ElementPlus from 'element-plus';
+import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+
+const ComponetService = {
+  setup(app: App) {
+    app.use(ElementPlus);
+
+    // element icons
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+  },
+};
+export default ComponetService;
+```
+
+- 全局注册
+
+```typescript
+// /src/main.ts
+// 添加
+
+import 'element-plus/theme-chalk/index.css';
+import ComponetService from '@/components/ComponetService';
+
+ComponetService.setup(app);
+```
+
+## 6.3 示例
+
+```vue
+// /src/App.vue
+// 添加
+
+<script setup lang="ts">
+</script>
+
+<template>
+  <el-button type="primary" icon="Edit" circle></el-button>
+</template>
+```
