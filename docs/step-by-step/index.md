@@ -2171,3 +2171,412 @@ window.addEventListener('resize', () => {
 });
 ```
 
+## 12.3 标签页
+
+> - 基于el-tabs
+> - 仅列出核心部分，详见代码
+
+### 12.3.1 tabViewStore
+
+```typescript
+// /src/stores/modules/tabViewStore.ts
+// 新建
+
+import { defineStore } from 'pinia';
+import { store } from '../StoreService';
+import RouterService from '@/router/RouterService';
+import { ref } from 'vue';
+import type { ITabView } from '@/layouts/default/components/CooTabView/types';
+
+const useStore = defineStore('TabViewStore', () => {
+  // state
+  const allTabs = ref<ITabView[]>([]);
+  const activeTab = ref<string>('');
+
+  // actions
+  function init() {
+    if (allTabs.value.length === 0) {
+      const tab: ITabView = {
+        title: '首页',
+        path: '/dashboard',
+        closable: false,
+      };
+      addTab(tab);
+    }
+  }
+
+  function addTab(tab: ITabView) {
+    if (_isTabAlreadyExists(tab)) {
+      activeTab.value = tab.path;
+    } else {
+      allTabs.value.push(tab);
+      activeTab.value = tab.path;
+    }
+    RouterService.router.push(activeTab.value);
+  }
+
+  function openInCurrentTab(tab: ITabView) {
+    if (activeTab.value === tab.path) {
+      return;
+    }
+
+    if (_isTabAlreadyExists(tab)) {
+      activeTab.value = tab.path;
+    } else {
+      const index = allTabs.value.findIndex((item) => item.path === activeTab.value);
+      if (index >= 0) {
+        allTabs.value.splice(index, 1);
+        allTabs.value.splice(index, 0, tab);
+        activeTab.value = tab.path;
+      }
+    }
+
+    RouterService.router.push(activeTab.value);
+  }
+
+  function _isTabAlreadyExists(tab: ITabView) {
+    const filters = allTabs.value.filter((item: ITabView) => {
+      return item.path === tab.path;
+    });
+
+    return filters.length !== 0;
+  }
+
+  function removeTab(name: String) {
+    const tabs = allTabs.value;
+    let activeName = activeTab.value;
+    if (activeName === name) {
+      tabs.forEach((tab: ITabView, index: number) => {
+        if (tab.path === name) {
+          const nextTab = tabs[index + 1] || tabs[index - 1];
+          if (nextTab) {
+            activeName = nextTab.path;
+          }
+        }
+      });
+    }
+
+    activeTab.value = activeName;
+    allTabs.value = tabs.filter((tab) => tab.path !== name);
+    RouterService.router.replace(activeTab.value);
+
+    init();
+  }
+
+  function setActiveTab(name: string) {
+    activeTab.value = name;
+    RouterService.router.push(activeTab.value);
+  }
+
+  return {
+    allTabs,
+    activeTab,
+    init,
+    addTab,
+    openInCurrentTab,
+    removeTab,
+    setActiveTab,
+  };
+});
+
+const tabViewStoreHook = useStore(store); // 在useStore()前声明，可解决错误：etActivePinia()" was called but there was no active Pinia. Did you forget to install pinia?
+
+export default useStore();
+export { tabViewStoreHook };
+```
+
+### 12.3.2 TabView组件
+
+- types
+
+```typescript
+// /src/layouts/default/components/CooTabView/types.ts
+// 新建
+
+interface ITabView {
+  title: string; // 选项卡标题
+  path: string; // 选项卡对应的router-view path
+  closable: boolean; // 是否可关闭
+}
+
+export type { ITabView };
+```
+
+- TabView组件
+
+```vue
+// /src/layouts/default/components/CooTabView/index.vue
+// 新建
+
+<template>
+  <div :class="$style.root">
+    <ElTabs v-model="tabViewStore.activeTab" type="card" :class="$style['main-tab']" @tab-click="handleClick" @tab-remove="handleRemove">
+      <ElTabPane v-for="item in tabViewStore.allTabs" :key="item.path" :name="item.path" :label="item.title" :closable="item.closable"> </ElTabPane>
+    </ElTabs>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { TabPaneName, TabsPaneContext } from 'element-plus';
+import { RoutePathEnum } from '@/router/RoutePathEnum';
+import type { IMenuItem } from '../CooSidebar/types';
+import type { ITabView } from './types';
+import tabViewStore from '@/stores/modules/tabViewStore';
+import menuStore from '@/stores/modules/menuStore';
+import RouterService from '@/router/RouterService';
+import { watch } from 'vue';
+
+watch(
+  () => menuStore.menus,
+  () => {
+    initTabView();
+  },
+);
+
+function handleClick(tab: TabsPaneContext) {
+  tabViewStore.setActiveTab(tab.paneName as string);
+}
+
+function handleRemove(name: TabPaneName) {
+  tabViewStore.removeTab(name as String);
+}
+
+function initTabView(): void {
+  const curPath = RouterService.router.currentRoute.value.path;
+  const matched = tabViewStore.allTabs.filter((item) => {
+    return curPath === item.path;
+  });
+
+  if (matched.length > 0) {
+    return;
+  }
+
+  if (tabViewStore.allTabs.length === 0) {
+    const homeTab: ITabView = {
+      title: '首页',
+      path: RoutePathEnum.HOME,
+      closable: false,
+    };
+    tabViewStore.addTab(homeTab);
+  }
+
+  const menu = getMenu(curPath);
+  if (null != menu) {
+    const currTab = {
+      title: menu.title,
+      path: menu.path as string,
+      closable: menu.tabClosable ?? true,
+    };
+    tabViewStore.addTab(currTab);
+  }
+}
+
+function getMenu(path: string): IMenuItem | null {
+  let matched = null;
+  for (const menu of menuStore.menus) {
+    matched = getPathInMenu(path, menu);
+    if (null != matched) {
+      return matched;
+    }
+  }
+
+  return null;
+}
+
+function getPathInMenu(path: string, menu: IMenuItem): IMenuItem | null {
+  if (menu.path && menu.path === path) {
+    return menu;
+  }
+
+  if (menu.children) {
+    let matched = null;
+    for (const item of menu.children) {
+      matched = getPathInMenu(path, item);
+      if (null != matched) {
+        return matched;
+      }
+    }
+  }
+
+  return null;
+}
+</script>
+
+<style module>
+.root {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 2px;
+}
+
+.main-tab {
+  --el-tabs-header-height: 24px;
+}
+
+.main-tab > :global(.el-tabs__header) {
+  margin: 0 !important;
+  border: 0 none;
+}
+
+.main-tab > :global(.el-tabs__header) :global(.el-tabs__nav-next),
+.main-tab > :global(.el-tabs__header) :global(.el-tabs__nav-prev) {
+  line-height: 30px;
+  color: var(--el-text-color-primary);
+}
+
+.main-tab :global(.el-tabs__item) {
+  border-radius: 6px 6px 0 0;
+}
+
+.main-tab :global(.el-tabs__item):global(.is-active) {
+  color: #ffffff;
+  background-color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
+}
+</style>
+```
+
+### 12.3.3 CooAppMain组件
+
+```vue
+// /src/layouts/default/components/CooAppMain/index.vue
+// 新建
+
+<template>
+  <div :class="$style.root">
+    <div :class="$style['tabview-wrapper']">
+      <div :class="$style['tabview-title']">
+        <CooTabView :class="$style['tabview-content']" />
+      </div>
+      <div :class="$style['tabview-action']"><button @click="toggleFullContent">全屏</button><br /></div>
+    </div>
+    <div :class="$style['view-container']">
+      <ElScrollbar>
+        <router-view v-slot="{ Component, route }">
+          <keep-alive :include="tabViewStore.allTabs.map((i) => i.path)">
+            <component :is="Component" :key="route.fullPath" />
+          </keep-alive>
+        </router-view>
+      </ElScrollbar>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import CooTabView from '@/layouts/default/components/CooTabView/index.vue';
+import tabViewStore from '@/stores/modules/tabViewStore';
+
+function toggleFullContent() {
+  var sidebar = document.getElementById('sidebar-wrapper');
+  var header = document.getElementById('header-wrapper');
+  var content = document.getElementById('content-wrapper');
+  sidebar?.classList.toggle('sidebar-wrapper-full-content');
+  header?.classList.toggle('header-wrapper-full-content');
+  content?.classList.toggle('content-wrapper-full-content');
+}
+</script>
+
+<style scoped></style>
+
+<style module>
+.root {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.root .tabview-wrapper {
+  flex: 0 0 auto;
+  display: flex;
+  overflow: hidden;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.root .tabview-wrapper .tabview-title {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.root .tabview-wrapper .tabview-action {
+  flex: 0 0 fit-content;
+  height: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.root .tabview-wrapper .tabview-action div {
+  padding: 0px 10px;
+  border-left: 1px solid #eeeeee;
+}
+
+.root .tabview-wrapper .tabview-action div:hover {
+  background-color: #f6f6f6;
+}
+
+.root .view-container {
+  flex: 1 1 auto;
+  background-color: #f2f3f5;
+  overflow: hidden;
+}
+
+.root .view-container > :global(.el-scrollbar) > :global(.el-scrollbar__wrap) > :global(.el-scrollbar__view) {
+  margin: 10px;
+  padding: 6px;
+  background-color: #ffffff;
+}
+</style>
+```
+
+### 12.3.4 更新CooLink组件
+
+```vue
+// /src/components/CooLink/index.vue
+//  修改/添加
+
+const props = defineProps({
+  ...
+
+  tabTitle: {
+    type: String,
+    required: false,
+  },
+});
+
+-----------------------------------------------------------------------
+
+function push() {
+  router.push(props.to).catch((err) => {
+    console.error(err);
+  });
+}
+                      ↓
+function push() {
+  const tab: ITabView = {
+    title: props.tabTitle ?? props.to,
+    path: props.to,
+    closable: true,
+  };
+  tabViewStore.addTab(tab);
+}
+```
+
+### 12.3.5 layout文件
+
+```html
+<div id="content-wrapper" class="content-wrapper">
+    Content
+    <button @click="toggleFullContent">全屏</button><br />
+    <RouterView />
+</div>
+                      ↓
+<div id="content-wrapper" class="content-wrapper">
+    <TwAppMain />
+</div>
+```

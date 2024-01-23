@@ -8,6 +8,8 @@
 </template>
 
 <script lang="ts" setup>
+import type { ITabView } from '@/layouts/default/components/CooTabView/types';
+import tabViewStore from '@/stores/modules/tabViewStore';
 import DomUtil from '@/utils/basic/DomUtil';
 import { useRouter } from 'vue-router';
 
@@ -16,12 +18,20 @@ const props = defineProps({
     type: String,
     required: true,
   },
+
+  tabTitle: {
+    type: String,
+    required: false,
+  },
 });
 
 const router = useRouter();
 function push() {
-  router.push(props.to).catch((err) => {
-    console.error(err);
-  });
+  const tab: ITabView = {
+    title: props.tabTitle ?? props.to,
+    path: props.to,
+    closable: true,
+  };
+  tabViewStore.addTab(tab);
 }
 </script>

@@ -1,6 +1,6 @@
 <template>
   <template v-if="!hasChild(item)">
-    <CooLink v-if="item.visiable ?? true" :to="item.path ?? '#'">
+    <CooLink v-if="item.visiable ?? true" :to="item.path ?? '#'" :tab-title="item.title">
       <ElMenuItem :index="item.path" :disabled="item.disabled ?? false">
         <CooSvgIcon v-if="item.icon" :name="item.icon" :color="sidebarTextcolor" />
         <template #title>
