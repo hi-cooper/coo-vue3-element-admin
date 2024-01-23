@@ -4,18 +4,13 @@
     <div id="drawer-bg" class="drawer-bg" @click="toggleSidebar"></div>
 
     <div id="sidebar-wrapper" class="sidebar-wrapper">
-      sidebar-wrapper
-
-      <ul>
-        <li><RouterLink to="/">Home</RouterLink></li>
-        <li><RouterLink to="/about">About</RouterLink></li>
-        <li><RouterLink to="/testing">Test</RouterLink></li>
-      </ul>
+      <CooSidebar :items="menus" />
     </div>
     <div class="main-wrapper">
       <div id="header-wrapper" class="header-wrapper">
         <div>
-          <button id="btnToggle" @click="toggleSidebar">&lt;&lt;</button>
+          <button v-if="appStore.screen.widthType !== ScreenWidthType.Small && appStore.sidebar.opened" @click="toggleSidebar">&lt;&lt;</button>
+          <button v-else @click="toggleSidebar">&gt;&gt;</button>
         </div>
         <div>全屏 &nbsp;&nbsp;&nbsp;&nbsp;头像</div>
       </div>
@@ -29,6 +24,11 @@
 </template>
 
 <script setup lang="ts">
+import type { IMenuItem } from './components/CooSidebar/types';
+import CooSidebar from './components/CooSidebar/index.vue';
+import appStore from '@/stores/modules/appStore';
+import { ScreenWidthType } from '@/types';
+
 const smallMaxWidth = 768; // px
 const middleMaxWidth = 1200; // px
 const sidebarShortWidth = 54; // px
@@ -55,14 +55,7 @@ function toggleSidebar() {
     sidebar?.classList.toggle('sidebar-wrapper-middle-show');
   }
 
-  const btnToggle = document.getElementById('btnToggle') as HTMLButtonElement | null;
-  if (btnToggle) {
-    if (sidebar?.clientWidth && sidebar?.clientWidth > sidebarShortWidth) {
-      btnToggle.innerHTML = '&lt;&lt;';
-    } else {
-      btnToggle.innerHTML = '&gt;&gt;';
-    }
-  }
+  appStore.toggleSidebar();
 }
 
 function toggleFullContent() {
@@ -75,6 +68,18 @@ function toggleFullContent() {
 }
 
 window.addEventListener('resize', () => {
+  var width = document.body.clientWidth;
+  if (width > middleMaxWidth) {
+    appStore.changeScreenWidthType(ScreenWidthType.Big);
+    appStore.openSidebar();
+  } else if (width <= smallMaxWidth) {
+    appStore.changeScreenWidthType(ScreenWidthType.Small);
+    appStore.closeSidebar();
+  } else {
+    appStore.changeScreenWidthType(ScreenWidthType.Middle);
+    appStore.closeSidebar();
+  }
+
   var sidebar = document.getElementById('sidebar-wrapper');
   var drawerBg = document.getElementById('drawer-bg');
 
@@ -83,6 +88,61 @@ window.addEventListener('resize', () => {
   sidebar?.classList.remove('sidebar-wrapper-middle-show');
   drawerBg?.classList.remove('drawer-bg-small-show');
 });
+</script>
+
+<script lang="ts">
+const menus: IMenuItem[] = [
+  {
+    id: '16598651166273538',
+    title: '首页',
+    path: '/',
+    icon: 'menu-language',
+    tabClosable: false,
+  },
+  {
+    id: '16598651166273539',
+    title: '测试',
+    path: '/testing',
+    icon: 'menu-language',
+  },
+  {
+    id: '16598651166273540',
+    title: '一级菜单A',
+    icon: 'menu-dict',
+    children: [
+      {
+        id: '16598651166273541',
+        title: '二级菜单A',
+        icon: 'menu-dict',
+        children: [
+          {
+            id: '16598651166273542',
+            title: '三级菜单A',
+            icon: 'menu-dict',
+            children: [
+              {
+                id: '16598651166273543',
+                title: '四级菜单A',
+                path: '#',
+                icon: 'menu-dict',
+                browser: true,
+                newTab: true,
+              },
+              {
+                id: '16598651166273544',
+                title: '四级菜单B',
+                path: '#',
+                icon: 'menu-dict',
+                browser: true,
+                newTab: false,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
 </script>
 
 <style scoped>

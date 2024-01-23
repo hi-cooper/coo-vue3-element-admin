@@ -1822,3 +1822,352 @@ body,#app {
 }
 ```
 
+## 12.2 侧边栏Sidebar
+
+### 12.2.1 辅助工具/组件
+
+- DomUtil.ts
+
+```typescript
+// /src/utils/basic/DomUtil.ts
+// 新建
+
+/**
+ * Check if an element has a class
+ * @param {HTMLElement} ele
+ * @param {string} cls
+ * @returns {boolean}
+ */
+function hasClass(ele: HTMLElement, cls: string) {
+  return !!ele.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));
+}
+
+/**
+ * Add class to element
+ * @param {HTMLElement} ele
+ * @param {string} cls
+ */
+function addClass(ele: HTMLElement, cls: string) {
+  if (!hasClass(ele, cls)) ele.className += ' ' + cls;
+}
+
+/**
+ * Remove class from element
+ * @param {HTMLElement} ele
+ * @param {string} cls
+ */
+function removeClass(ele: HTMLElement, cls: string) {
+  if (hasClass(ele, cls)) {
+    const reg = new RegExp('(\\s|^)' + cls + '(\\s|$)');
+    ele.className = ele.className.replace(reg, ' ');
+  }
+}
+
+/**
+ * @param {string} path
+ * @returns {Boolean}
+ */
+function isExternal(path: string) {
+  return /^(https?:|http?:|mailto:|tel:)/.test(path);
+}
+
+const DomUtil = {
+  hasClass,
+  addClass,
+  removeClass,
+  isExternal,
+};
+export default DomUtil;
+```
+
+- CooLink
+
+```vue
+// src/components/CooLink/index.vue
+// 新建
+
+<template>
+  <a v-if="DomUtil.isExternal(to)" :href="to" target="_blank" rel="noopener">
+    <slot />
+  </a>
+  <div v-else @click="push">
+    <slot />
+  </div>
+</template>
+
+<script lang="ts" setup>
+import DomUtil from '@/utils/basic/DomUtil';
+import { useRouter } from 'vue-router';
+
+const props = defineProps({
+  to: {
+    type: String,
+    required: true,
+  },
+});
+
+const router = useRouter();
+function push() {
+  router.push(props.to).catch((err) => {
+    console.error(err);
+  });
+}
+</script>
+```
+
+- 全局types
+
+```typescript
+// /src/types/index.ts
+// 新建
+
+enum ScreenWidthType {
+  Big,
+  Middle,
+  Small,
+}
+
+export { ScreenWidthType };
+```
+
+- appStore.ts
+
+```typescript
+// /src/stores/modules/appStore.ts
+// 新建
+
+import { defineStore } from 'pinia';
+import { reactive } from 'vue';
+import { store } from '../StoreService';
+import { ScreenWidthType } from '@/types';
+
+const useStore = defineStore('AppStore', () => {
+  // state
+  const sidebar = reactive({
+    opened: true,
+    withoutAnimation: false,
+  });
+  const screen = reactive({
+    widthType: ScreenWidthType.Big,
+  });
+
+  // actions
+  function openSidebar() {
+    sidebar.opened = true;
+  }
+  function closeSidebar() {
+    sidebar.opened = false;
+  }
+  function toggleSidebar() {
+    sidebar.opened = !sidebar.opened;
+  }
+
+  function changeScreenWidthType(type: ScreenWidthType) {
+    screen.widthType = type;
+  }
+
+  return {
+    sidebar,
+    screen,
+    openSidebar,
+    closeSidebar,
+    toggleSidebar,
+    changeScreenWidthType,
+  };
+});
+
+const appStoreHook = useStore(store); // 在useStore()前声明，可解决错误：etActivePinia()" was called but there was no active Pinia. Did you forget to install pinia?
+
+export default useStore();
+export { appStoreHook };
+```
+
+### 12.2.2 核心组件封装
+
+- types
+
+```typescript
+// src/layouts/default/components/CooSidebar/types.ts
+// 新建
+
+declare type IMenuItem = ISubMenuRaw | IMenuItemRaw | IMenuItemDisabledRaw;
+
+interface IMenuItemRaw extends IBaseMenu {
+  path: string;
+  children?: never;
+}
+
+interface IMenuItemDisabledRaw extends IBaseMenu {
+  path?: string;
+  children?: never;
+  disabled: true;
+}
+
+interface ISubMenuRaw extends IBaseMenu {
+  path?: never;
+  isTab?: never;
+  children: IMenuItem[];
+}
+
+interface IBaseMenu {
+  id: string; // id，全局唯一
+  title: string; // 显示标题
+  path?: string; // url（绝对路径，最终route path，即不能是redirect前的route path）。支持外链
+  icon?: string; // 菜单图标。icon路径。根目录为”/src/assets“
+  visiable?: boolean; // 是否显示。true-是；false-否；
+  browser?: boolean; // 是否浏览器打开。true-是；false-否（即系统标签页打开）；默认false
+  newTab?: boolean; // 是否在新标签页打开。true-是；false-否。默认true
+  disabled?: boolean; // 是否禁用。true-是；false-否。默认false
+  tabClosable?: boolean; // tab标签页是否可关闭。true-是；false-否。默认true
+  children?: IMenuItem[];
+}
+
+export type { IMenuItem, ISubMenuRaw, IMenuItemRaw };
+```
+
+- 侧边栏核心组件
+
+```vue
+// src/layouts/default/components/CooSidebar/CooSidebarItem.vue
+// 新建
+
+<template>
+  <template v-if="!hasChild(item)">
+    <CooLink v-if="item.visiable ?? true" :to="item.path ?? '#'">
+      <ElMenuItem :index="item.path" :disabled="item.disabled ?? false">
+        <CooSvgIcon v-if="item.icon" :name="item.icon" :color="sidebarTextcolor" />
+        <template #title>
+          {{ item.title }}
+        </template>
+      </ElMenuItem>
+    </CooLink>
+  </template>
+
+  <ElSubMenu v-else :index="item.id" teleported :disabled="item.disabled ?? false">
+    <template #title>
+      <CooSvgIcon v-if="item.icon" :name="item.icon" :color="sidebarTextcolor" />
+      <span v-if="item.title">{{ item.title }}</span>
+    </template>
+
+    <CooSidebarItem v-for="child in item.children" :key="child.id" :item="child" />
+  </ElSubMenu>
+</template>
+
+<script setup lang="ts">
+import type { PropType } from 'vue';
+import type { IMenuItem } from './types';
+import CooLink from '@/components/CooLink/index.vue';
+import CooSvgIcon from '@/components/CooSvgIcon/index.vue';
+
+defineProps({
+  item: {
+    type: Object as PropType<IMenuItem>,
+    required: true,
+  },
+});
+
+const sidebarTextcolor = '#b7bdc3';
+
+/**
+ * 判断当前菜单是否包含可显示的子菜单
+ *
+ * @param item 当前菜单
+ */
+function hasChild(item: IMenuItem) {
+  const effectives = item.children?.filter((item: any) => {
+    return item.visiable ?? true;
+  });
+
+  if (null == effectives || effectives.length === 0) {
+    return false;
+  }
+
+  return true;
+}
+</script>
+
+<style scoped>
+.coo-svg-icon {
+  margin-right: 8px;
+}
+
+.coo-link {
+  display: block;
+}
+
+.coo-link :deep(.el-link__inner) {
+  display: block !important;
+}
+</style>
+```
+
+- index
+
+```vue
+// src/layouts/default/components/CooSidebar/index.vue
+// 新建
+
+<template>
+  <ElScrollbar>
+    <ElMenu :default-active="currRoute.path" :unique-opened="false" :collapse="!appStore.sidebar.opened" mode="vertical">
+      <CooSidebarItem v-for="item in items" :key="item.id" :item="item" />
+    </ElMenu>
+  </ElScrollbar>
+</template>
+
+<script setup lang="ts">
+import CooSidebarItem from './CooSidebarItem.vue';
+import appStore from '@/stores/modules/appStore';
+import { ref, type PropType } from 'vue';
+import type { IMenuItem } from './types';
+import RouterService from '@/router/RouterService';
+
+defineProps({
+  items: {
+    type: Object as PropType<IMenuItem[]>,
+    required: true,
+  },
+});
+
+const currRoute = ref(RouterService.router.currentRoute);
+</script>
+```
+
+### 12.2.3 layout文件
+
+> 详见代码记录
+
+```vue
+// /src/layouts/default/index.vue
+// 修改
+
+<div id="sidebar-wrapper" class="sidebar-wrapper">
+    sidebar-wrapper
+
+    <ul>
+        <li><RouterLink to="/">Home</RouterLink></li>
+        <li><RouterLink to="/about">About</RouterLink></li>
+        <li><RouterLink to="/testing">Test</RouterLink></li>
+    </ul>
+</div>
+                      ↓
+<div id="sidebar-wrapper" class="sidebar-wrapper">
+    <CooSidebar :items="menus" />
+</div>
+
+// 添加
+window.addEventListener('resize', () => {
+  var width = document.body.clientWidth;
+  if (width > middleMaxWidth) {
+    appStore.changeScreenWidthType(ScreenWidthType.Big);
+    appStore.openSidebar();
+  } else if (width <= smallMaxWidth) {
+    appStore.changeScreenWidthType(ScreenWidthType.Small);
+    appStore.closeSidebar();
+  } else {
+    appStore.changeScreenWidthType(ScreenWidthType.Middle);
+    appStore.closeSidebar();
+  }
+});
+```
+
