@@ -1,29 +1,16 @@
 import type { RouteRecordRaw } from 'vue-router';
-
-const DEFAULT_LAYOUT = () => import('@/layouts/default/index.vue');
+import { DEFAULT_LAYOUT } from '../../variables';
+import { RoutePathEnum } from '@/router/RoutePathEnum';
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: DEFAULT_LAYOUT,
-    redirect: '/home',
+    redirect: RoutePathEnum.HOME,
     children: [
       {
-        path: '/home',
-        name: 'home',
-        component: () => import('@/views/HomeView.vue'),
-      },
-    ],
-  },
-  {
-    path: '/about',
-    component: DEFAULT_LAYOUT,
-    redirect: '/about/index',
-    children: [
-      {
-        path: '/about/index',
-        name: 'about',
-        component: () => import('@/views/AboutView.vue'),
+        path: RoutePathEnum.HOME,
+        component: () => import('@/views/dashboard/index.vue'),
       },
     ],
   },

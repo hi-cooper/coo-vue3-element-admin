@@ -1,8 +1,16 @@
 <template>
   <template v-if="!hasChild(item)">
-    <CooLink v-if="item.visiable ?? true" :to="item.path ?? '#'" :tab-title="item.title">
+    <CooLink
+      v-if="item.visiable ?? true"
+      :to="item.path ?? '#'"
+      :browser="item.browser ?? false"
+      :new-tab="item.newTab ?? true"
+      :tab-title="item.title"
+      :tab-closable="item.tabClosable ?? true"
+      :disabled="item.disabled ?? false"
+    >
       <ElMenuItem :index="item.path" :disabled="item.disabled ?? false">
-        <CooSvgIcon v-if="item.icon" :name="item.icon" :color="sidebarTextcolor" />
+        <CooSvgIcon v-if="item.icon" :name="item.icon" :color="scss.sidebarTextcolor" />
         <template #title>
           {{ item.title }}
         </template>
@@ -12,7 +20,7 @@
 
   <ElSubMenu v-else :index="item.id" teleported :disabled="item.disabled ?? false">
     <template #title>
-      <CooSvgIcon v-if="item.icon" :name="item.icon" :color="sidebarTextcolor" />
+      <CooSvgIcon v-if="item.icon" :name="item.icon" :color="scss.sidebarTextcolor" />
       <span v-if="item.title">{{ item.title }}</span>
     </template>
 
@@ -23,8 +31,9 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 import type { IMenuItem } from './types';
-import CooLink from '@/components/CooLink/index.vue';
 import CooSvgIcon from '@/components/CooSvgIcon/index.vue';
+import CooLink from '@/components/CooLink/index.vue';
+import scss from '@/layouts/scss/variables.module.scss';
 
 defineProps({
   item: {
@@ -32,8 +41,6 @@ defineProps({
     required: true,
   },
 });
-
-const sidebarTextcolor = '#b7bdc3';
 
 /**
  * 判断当前菜单是否包含可显示的子菜单
@@ -53,16 +60,16 @@ function hasChild(item: IMenuItem) {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .coo-svg-icon {
   margin-right: 8px;
 }
 
 .coo-link {
   display: block;
-}
 
-.coo-link :deep(.el-link__inner) {
-  display: block !important;
+  :deep(.el-link__inner) {
+    display: block !important;
+  }
 }
 </style>

@@ -11,9 +11,9 @@ import type { TabPaneName, TabsPaneContext } from 'element-plus';
 import { RoutePathEnum } from '@/router/RoutePathEnum';
 import type { IMenuItem } from '../CooSidebar/types';
 import type { ITabView } from './types';
-import tabViewStore from '@/stores/modules/tabViewStore';
-import menuStore from '@/stores/modules/menuStore';
 import RouterService from '@/router/RouterService';
+import menuStore from '@/stores/modules/menuStore';
+import tabViewStore from '@/stores/modules/tabViewStore';
 import { watch } from 'vue';
 
 watch(
@@ -92,36 +92,35 @@ function getPathInMenu(path: string, menu: IMenuItem): IMenuItem | null {
 }
 </script>
 
-<style module>
+<style lang="scss" module>
 .root {
   width: 100%;
   height: 100%;
   padding: 0;
   margin: 2px;
 }
-
 .main-tab {
   --el-tabs-header-height: 24px;
-}
 
-.main-tab > :global(.el-tabs__header) {
-  margin: 0 !important;
-  border: 0 none;
-}
+  > :global(.el-tabs__header) {
+    margin: 0 !important;
+    border: 0 none;
 
-.main-tab > :global(.el-tabs__header) :global(.el-tabs__nav-next),
-.main-tab > :global(.el-tabs__header) :global(.el-tabs__nav-prev) {
-  line-height: 30px;
-  color: var(--el-text-color-primary);
-}
+    :global(.el-tabs__nav-next),
+    :global(.el-tabs__nav-prev) {
+      line-height: 30px;
+      color: var(--el-text-color-primary);
+    }
+  }
 
-.main-tab :global(.el-tabs__item) {
-  border-radius: 6px 6px 0 0;
-}
+  :global(.el-tabs__item) {
+    border-radius: 6px 6px 0 0;
 
-.main-tab :global(.el-tabs__item):global(.is-active) {
-  color: #ffffff;
-  background-color: var(--el-color-primary);
-  border-color: var(--el-color-primary);
+    &:global(.is-active) {
+      color: #ffffff;
+      background-color: var(--el-color-primary);
+      border-color: var(--el-color-primary);
+    }
+  }
 }
 </style>

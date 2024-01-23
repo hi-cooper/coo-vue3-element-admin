@@ -1,21 +1,24 @@
 <template>
   <div class="app-wrapper">
-    <!-- 手机设备侧边栏打开遮罩层 -->
-    <div id="drawer-bg" class="drawer-bg" @click="toggleSidebar"></div>
+    <div v-if="isSmallScreenWidth && isSidebarOpened" id="drawer-bg" class="drawer-bg" @click="appStore.toggleSidebar"></div>
 
-    <div id="sidebar-wrapper" class="sidebar-wrapper">
-      <CooSidebar :items="menus" />
+    <div
+      id="sidebar-wrapper"
+      class="sidebar-wrapper"
+      :class="{
+        'sidebar-wrapper-opened': !isSmallScreenWidth && isSidebarOpened,
+        'sidebar-wrapper-closed': !isSmallScreenWidth && !isSidebarOpened,
+        'sidebar-wrapper-small-show': isSmallScreenWidth && isSidebarOpened,
+        'full-content-sidebar-wrapper': !isSmallScreenWidth && isFullContent,
+      }"
+    >
+      <CooSidebar :items="menuStore.menus" />
     </div>
     <div class="main-wrapper">
-      <div id="header-wrapper" class="header-wrapper">
-        <div>
-          <button v-if="appStore.screen.widthType !== ScreenWidthType.Small && appStore.sidebar.opened" @click="toggleSidebar">&lt;&lt;</button>
-          <button v-else @click="toggle">&gt;&gt;</button>
-        </div>
-        <button @click="toggle">全屏</button>
-        &nbsp;&nbsp;&nbsp;&nbsp;头像
+      <div id="header-wrapper" class="header-wrapper" :class="{ 'full-content-header-wrapper': !isSmallScreenWidth && isFullContent }">
+        <CooHeader />
       </div>
-      <div id="content-wrapper" class="content-wrapper">
+      <div id="content-wrapper" class="content-wrapper" :class="{ 'full-content-content-wrapper': !isSmallScreenWidth && isFullContent }">
         <CooAppMain />
       </div>
     </div>
@@ -23,63 +26,36 @@
 </template>
 
 <script setup lang="ts">
-import type { IMenuItem } from './components/CooSidebar/types';
 import CooSidebar from './components/CooSidebar/index.vue';
-import appStore from '@/stores/modules/appStore';
-import { ScreenWidthType } from '@/types';
+import type { IMenuItem } from './components/CooSidebar/types';
+import CooHeader from './components/CooHeader/index.vue';
 import CooAppMain from './components/CooAppMain/index.vue';
-import { useFullscreen } from '@vueuse/core';
+import { useWindowSize } from '@vueuse/core';
+import appStore from '@/stores/modules/appStore';
+import menuStore from '@/stores/modules/menuStore';
+import { ScreenWidthType } from '@/types';
+import { computed, onMounted, watchEffect } from 'vue';
 
-const smallMaxWidth = 768; // px
-const middleMaxWidth = 1200; // px
-const sidebarShortWidth = 54; // px
-const { toggle } = useFullscreen();
+const isSidebarOpened = computed(() => appStore.sidebar.opened);
+const isSmallScreenWidth = computed(() => appStore.screen.widthType === ScreenWidthType.Small);
+const isFullContent = computed(() => appStore.isFullContent);
 
-function toggleSidebar() {
-  var sidebar = document.getElementById('sidebar-wrapper');
-  var drawerBg = document.getElementById('drawer-bg');
+onMounted(() => {
+  menuStore.setMenus(menus);
+});
 
-  var width = document.body.clientWidth;
-  if (width > middleMaxWidth) {
-    sidebar?.classList.remove('sidebar-wrapper-middle-show');
-    sidebar?.classList.remove('sidebar-wrapper-small-show');
-    drawerBg?.classList.remove('drawer-bg-small-show');
-    sidebar?.classList.toggle('sidebar-wrapper-big-hide');
-  } else if (width <= smallMaxWidth) {
-    sidebar?.classList.remove('sidebar-wrapper-big-hide');
-    sidebar?.classList.remove('sidebar-wrapper-middle-show');
-    sidebar?.classList.toggle('sidebar-wrapper-small-show');
-    drawerBg?.classList.toggle('drawer-bg-small-show');
+watchEffect(() => {
+  const smallMaxWidth = 768; // px
+  const middleMaxWidth = 1200; // px
+  const { width } = useWindowSize();
+
+  if (width.value > middleMaxWidth) {
+    appStore.setScreenWidthType(ScreenWidthType.Big);
+  } else if (width.value <= smallMaxWidth) {
+    appStore.setScreenWidthType(ScreenWidthType.Small);
   } else {
-    sidebar?.classList.remove('sidebar-wrapper-big-hide');
-    sidebar?.classList.remove('sidebar-wrapper-small-show');
-    drawerBg?.classList.remove('drawer-bg-small-show');
-    sidebar?.classList.toggle('sidebar-wrapper-middle-show');
+    appStore.setScreenWidthType(ScreenWidthType.Middle);
   }
-
-  appStore.toggleSidebar();
-}
-
-window.addEventListener('resize', () => {
-  var width = document.body.clientWidth;
-  if (width > middleMaxWidth) {
-    appStore.changeScreenWidthType(ScreenWidthType.Big);
-    appStore.openSidebar();
-  } else if (width <= smallMaxWidth) {
-    appStore.changeScreenWidthType(ScreenWidthType.Small);
-    appStore.closeSidebar();
-  } else {
-    appStore.changeScreenWidthType(ScreenWidthType.Middle);
-    appStore.closeSidebar();
-  }
-
-  var sidebar = document.getElementById('sidebar-wrapper');
-  var drawerBg = document.getElementById('drawer-bg');
-
-  sidebar?.classList.remove('sidebar-wrapper-big-hide');
-  sidebar?.classList.remove('sidebar-wrapper-small-show');
-  sidebar?.classList.remove('sidebar-wrapper-middle-show');
-  drawerBg?.classList.remove('drawer-bg-small-show');
 });
 </script>
 
@@ -88,7 +64,7 @@ const menus: IMenuItem[] = [
   {
     id: '16598651166273538',
     title: '首页',
-    path: '/',
+    path: '/dashboard',
     icon: 'menu-language',
     tabClosable: false,
   },
@@ -138,13 +114,10 @@ const menus: IMenuItem[] = [
 ];
 </script>
 
-<style scoped>
-/* @media (min-width: 768px)
-        @media (min-width: 992px)
-        @media (min-width: 1200px)
-        @media (max-width: 767px) */
+<style lang="scss" scoped>
 html,
-body {
+body,
+.app-wrapper {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -154,97 +127,101 @@ body {
 
 .app-wrapper {
   display: flex;
-  height: 100%;
-}
 
-.sidebar-wrapper {
-  flex: 0 0 210px;
-  display: block;
-  overflow: auto;
-  background: lightblue;
-}
-
-.main-wrapper {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-}
-
-.header-wrapper {
-  flex: 0 0 50px;
-  display: flex;
-  overflow: hidden;
-  align-items: center;
-  justify-content: space-between;
-  background: lightgreen;
-}
-
-.content-wrapper {
-  flex: 1 1 auto;
-  height: calc(100% - 50px);
-  background: lightpink;
-  overflow: auto;
-}
-</style>
-
-<style scoped>
-/* 大屏 & 中屏（>768px） */
-@media (min-width: 768px) {
-  .sidebar-wrapper-full-content {
-    /* flex: 0 0 0 !important;
-          overflow: hidden; */
-    display: none !important;
-  }
-
-  .header-wrapper-full-content {
-    /* flex: 0 0 0 !important;
-          overflow: hidden; */
-    display: none !important;
-  }
-
-  .content-wrapper-full-content {
-    height: 100%;
-  }
-}
-</style>
-
-<style scoped>
-/* all: 大屏（>=1200px） */
-@media (min-width: 1200px) {
-  .sidebar-wrapper-big-hide {
-    /*display: none;*/
-    flex: 0 0 54px;
-    display: block;
-  }
-}
-</style>
-
-<style scoped>
-/* 中屏（>768px && < 1200px） */
-@media (max-width: 1200px) and (min-width: 768px) {
   .sidebar-wrapper {
-    flex: 0 0 54px;
-    display: block;
     overflow: hidden;
+    background-color: $layout__sidebar__backgrount_color;
   }
 
-  .sidebar-wrapper-middle-show {
-    flex: 0 0 210px;
-    display: block;
+  .main-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .header-wrapper {
+      flex: 0 0 $layout__header_height;
+      overflow: hidden;
+    }
+
+    .content-wrapper {
+      flex: 1 1 auto;
+      height: calc(100% - $layout__header_height);
+      overflow: hidden;
+    }
   }
 }
 </style>
 
-<style scoped>
-/* all: 小屏（<768px） */
-@media (max-width: 768px) {
+<style lang="scss" scoped>
+/* 大屏 & 中屏（>768px） */
+@media (min-width: $screen_width__small) {
+  .sidebar-wrapper {
+    display: block;
+    transition: flex $layout__sidebar__transition_duration;
+
+    &-closed {
+      flex: 0 0 $layout__sidebar_width__closed !important;
+    }
+
+    &-opened {
+      flex: 0 0 $layout__sidebar_width__opened !important;
+    }
+  }
+
+  .main-wrapper {
+    transition: flex $layout__sidebar__transition_duration;
+  }
+
+  .full-content {
+    &-sidebar-wrapper {
+      display: none !important;
+    }
+
+    &-header-wrapper {
+      display: none !important;
+    }
+
+    &-content-wrapper {
+      height: 100%;
+    }
+  }
+}
+</style>
+
+<style lang="scss" scoped>
+/* 大屏（>=1200px） */
+@media (min-width: $screen_width__big) {
+  .sidebar-wrapper {
+    flex: 0 0 $layout__sidebar_width__opened;
+  }
+}
+</style>
+
+<style lang="scss" scoped>
+/* 中屏（>768px && < 1200px） */
+@media (max-width: $screen_width__big) and (min-width: $screen_width__small) {
+  .sidebar-wrapper {
+    flex: 0 0 $layout__sidebar_width__closed;
+  }
+}
+</style>
+
+<style lang="scss" scoped>
+/* 小屏（<768px） */
+@media (max-width: $screen_width__small) {
   .sidebar-wrapper {
     position: absolute;
     top: 0;
     left: 0;
     z-index: 1001;
     height: 100%;
-    display: none;
+    max-width: 0;
+    transition: max-width $layout__sidebar__transition_duration;
+
+    &-small-show {
+      max-width: 80% !important;
+    }
   }
 
   .drawer-bg {
@@ -254,13 +231,8 @@ body {
     z-index: 1000;
     width: 100%;
     height: 100%;
-    background: #000;
+    background-color: #000000;
     opacity: 0.3;
-    display: none;
-  }
-
-  #sidebar-wrapper.sidebar-wrapper-small-show,
-  #drawer-bg.drawer-bg-small-show {
     display: block;
   }
 }
