@@ -3,7 +3,7 @@ import './assets/main.css';
 
 import ComponetService from '@/components/ComponetService';
 import { createApp } from 'vue';
-import { createPinia } from 'pinia';
+import StoreService from '@/stores/StoreService';
 
 import App from './App.vue';
 import router from './router';
@@ -11,7 +11,7 @@ import router from './router';
 const app = createApp(App);
 
 ComponetService.setup(app);
-app.use(createPinia());
+StoreService.setup(app);
 app.use(router);
 
 app.mount('#app');

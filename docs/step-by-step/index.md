@@ -316,3 +316,194 @@ ComponetService.setup(app);
   <el-button type="primary" icon="Edit" circle></el-button>
 </template>
 ```
+
+# 7 状态管理Pinia
+
+> 使用vue模板创建项目时，已默认安装，这里仅进行优化
+
+## 7.1 配置
+
+- StoreService.ts
+
+```typescript
+// /src/stores/StoreService.ts
+// 新建
+
+import type { App } from 'vue';
+import { createPinia } from 'pinia';
+
+const store = createPinia();
+
+function _init(): void {
+  // console.log('Store init');
+}
+
+const StoreService = {
+  setup(app: App<Element>) {
+    app.use(store);
+    _init();
+  },
+};
+
+export default StoreService;
+export { store };
+```
+
+- 全局注册
+
+```typescript
+// /src/main.ts
+// 替换
+
+import { createPinia } from 'pinia';
+app.use(createPinia());
+               ↓
+import StoreService from '@/stores/StoreService';
+StoreService.setup(app);
+```
+
+## 7.2 使用规则
+
+在`/src/stores/modules`目录下创建状态管理类，在需要使用的地方import该类进行管理。
+
+## 7.3 示例
+
+以用户状态存储和管理为示例进行说明。
+
+### 7.3.1 在`modules`目录下创建`用户状态管理类userStore.ts`
+
+```typescript
+// /src/stores/modules/userStore.ts
+// 新建
+
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { store } from '../StoreService';
+
+const useStore = defineStore('UserStore', () => {
+  // state
+  const openId = ref<string>('user_open_id');
+  const nickname = ref<string>('user_nickname');
+  const avatar = ref<string>('user_avatoar');
+
+  // actions
+  function updateNickname(val: string) {
+    nickname.value = val;
+  }
+
+  return {
+    openId,
+    nickname,
+    avatar,
+    updateNickname,
+  };
+});
+
+const userStoreHook = useStore(store); // 在useStore()前声明，可解决错误：etActivePinia()" was called but there was no active Pinia. Did you forget to install pinia?
+
+export default useStore();
+export { userStoreHook };
+```
+
+### 7.3.2 创建测试页面
+
+```vue
+// /src/views/testing/index.vue
+// 新建
+
+<template>
+  <button @click="testStoreHandler">Test Store</button>
+</template>
+<script setup lang="ts">
+import testStore from './store.vue';
+
+function testStoreHandler() {
+  testStore();
+}
+</script>
+```
+
+### 7.3.3 引入测试页面
+
+```vue
+// /src/views/testing/store.vue
+// 添加
+
+<!-- 正确运行 -->
+<!-- <template>测试Store</template>
+<script setup lang="ts">
+function testStore() {
+  console.log('\n============================begin test store============================');
+  console.log(userStore.nickname);
+  userStore.updateNickname('NICK_NAME');
+  console.log(userStore.nickname);
+  console.log('============================end test store============================');
+}
+
+testStore();
+</script> -->
+
+<!-- 将文件改成下面代码，正确运行 -->
+<!-- <template>测试Store</template>
+<script lang="ts">
+import { userStoreHook } from '@/store/modules/userStore';
+
+function testStore() {
+  console.log('\n============================begin test store============================');
+  console.log('without setup', userStoreHook.nickname);
+  userStoreHook.updateNickname('NICK_NAME_WITHOUT_SETUP');
+  console.log('without setup', userStoreHook.nickname);
+  console.log('============================end test store============================');
+}
+export default testStore;
+</script> -->
+
+<!-- 将文件改成下面代码，正确运行， -->
+<!-- 因为已在userStore.ts中const userStoreHook = useStore(store);声明在useStore()前。but why? -->
+<template>测试Store</template>
+<script lang="ts">
+import userStore from '@/stores/modules/userStore';
+
+function testStore() {
+  console.log('\n============================begin test store============================');
+  console.log('store: without setup', userStore.nickname);
+  userStore.updateNickname('NICK_NAME_WITHOUT_SETUP');
+  console.log('store: without setup', userStore.nickname);
+  console.log('============================end test store============================');
+}
+export default testStore;
+</script>
+```
+
+### 7.3.4 路由配置
+
+- 路由
+
+```typescript
+// /src/router/index.ts
+// 添加
+
+const router = createRouter({
+    {
+      path: '/testing',
+      name: 'testing',
+      component: () => import('@/views/testing/index.vue'),
+    },
+  ],
+});
+
+```
+
+- App.vue
+
+```vue
+// /src/App.vue
+// 添加
+
+<RouterLink to="/testing">测试</RouterLink>
+```
+
+### 7.3.5 运行结果
+
+![](https://czmdi.cooperzhu.com/technology/vue/vue3-element-plushuan-jing-da-jian-step-by-step/7-3-5_1.png)
+
