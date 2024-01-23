@@ -1,23 +1,43 @@
 import type { RouteRecordRaw } from 'vue-router';
 
+const DEFAULT_LAYOUT = () => import('@/layouts/default/index.vue');
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    name: 'home',
-    component: () => import('@/views/HomeView.vue'),
+    component: DEFAULT_LAYOUT,
+    redirect: '/home',
+    children: [
+      {
+        path: '/home',
+        name: 'home',
+        component: () => import('@/views/HomeView.vue'),
+      },
+    ],
   },
   {
     path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (About.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import('@/views/AboutView.vue'),
+    component: DEFAULT_LAYOUT,
+    redirect: '/about/index',
+    children: [
+      {
+        path: '/about/index',
+        name: 'about',
+        component: () => import('@/views/AboutView.vue'),
+      },
+    ],
   },
   {
     path: '/testing',
-    name: 'testing',
-    component: () => import('@/views/testing/index.vue'),
+    component: DEFAULT_LAYOUT,
+    redirect: '/testing/index',
+    children: [
+      {
+        path: '/testing/index',
+        name: 'testing',
+        component: () => import('@/views/testing/index.vue'),
+      },
+    ],
   },
 ];
 export default routes;
