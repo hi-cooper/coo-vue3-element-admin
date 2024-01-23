@@ -4,14 +4,14 @@ import './assets/main.css';
 import ComponetService from '@/components/ComponetService';
 import { createApp } from 'vue';
 import StoreService from '@/stores/StoreService';
+import RouterService from '@/router/RouterService';
 
 import App from './App.vue';
-import router from './router';
 
 const app = createApp(App);
 
 ComponetService.setup(app);
 StoreService.setup(app);
-app.use(router);
+RouterService.setup(app);
 
 app.mount('#app');

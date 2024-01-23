@@ -507,3 +507,111 @@ const router = createRouter({
 
 ![](https://czmdi.cooperzhu.com/technology/vue/vue3-element-plushuan-jing-da-jian-step-by-step/7-3-5_1.png)
 
+# 8 路由router
+
+> see: https://router.vuejs.org/zh/
+
+## 8.1 优化配置
+
+- 删除`/src/router/index.ts`
+
+- RouterService.ts
+
+```typescript
+// /src/router/RouterService.ts
+// 新建
+
+import type { RouteRecordRaw } from 'vue-router';
+import type { App } from 'vue';
+import { createRouter, createWebHashHistory } from 'vue-router';
+import allRoutes from './route/index';
+
+const router = createRouter({
+  routes: allRoutes as RouteRecordRaw[],
+  history: createWebHashHistory(import.meta.env.BASE_URL),
+  scrollBehavior: () => ({ left: 0, top: 0 }), // 刷新时，还原滚动条位置
+});
+
+function setup(app: App<Element>) {
+  app.use(router);
+}
+
+const RouterService = {
+  router,
+  setup,
+};
+
+export { router };
+export default RouterService;
+```
+
+- /src/routerroute/index.ts
+
+```typescript
+// /src/router/route/index.ts
+// 新建
+
+import type { RouteRecordRaw } from 'vue-router';
+
+const modules = import.meta.glob<Record<string, unknown>>('./modules/**/*.ts', { eager: true });
+const allRoutes: RouteRecordRaw[] = [];
+
+Object.keys(modules).forEach((key) => {
+    const mod = modules[key].default || {}; // 仅支持export default
+    const modList = Array.isArray(mod) ? [...mod] : [mod];
+    allRoutes.push(...modList);
+});
+
+export default allRoutes;
+```
+
+- 全局注册
+
+```typescript
+// /src/main.ts
+// 替换
+
+import router from './router';
+app.use(router);
+               ↓
+import RouterService from '@/router/RouterService';
+RouterService.setup(app);
+```
+
+## 8.2 使用规则
+
+在`/src/router/route/modules`目录下创建路由配置（参见8.3示例）。
+
+## 8.3 示例：将原来`/src/router/index.ts`的配置移至`/src/router/route/modules/basicRoutes.ts`
+
+```typescript
+import { createRouter, createWebHistory } from 'vue-router';
+import HomeView from '../views/HomeView.vue';
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      name: 'home',
+      component: HomeView,
+    },
+    {
+      path: '/about',
+      name: 'about',
+      // route level code-splitting
+      // this generates a separate chunk (About.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import('@/views/AboutView.vue'),
+    },
+    {
+      path: '/testing',
+      name: 'testing',
+      component: () => import('@/views/testing/index.vue'),
+    },
+  ],
+});
+
+export default router;
+```
+
