@@ -2612,3 +2612,76 @@ pnpm add @vueuse/core
     const { toggle } = useFullscreen();
 </script>
 ```
+
+# 14 sass/scss
+
+> vue sass: https://cli.vuejs.org/guide/css.html#pre-processors
+>
+> vite sass: https://vitejs.dev/config/shared-options.html#css-preprocessoroptions
+
+## 14.1 安装
+
+```shell
+pnpm add -D sass-loader sass
+```
+
+## 14.2 配置
+
+- vite.config.ts
+
+```typescript
+// /vite.config.ts
+// 添加
+
+export default defineConfig({
+  css: {
+    // CSS 预处理器
+    preprocessorOptions: {
+      //define global scss variable
+      scss: {
+        javascriptEnabled: true,
+        additionalData: `@use "@/layouts/scss/index.scss" as *;`, // 默认scss文件
+      },
+    },
+  },
+});
+```
+
+- index.scss
+
+```scss
+// /src/layouts/scss/index.scss
+// 新建
+```
+
+## 14.3 示例
+
+- index.scss定义变量
+
+```scss
+// /src/layouts/scss/index.scss
+// 新建
+
+$background-color: #ff0000;
+$text-color: #ffffff;
+```
+
+- 页面引用
+
+```vue
+// /src/views/testing/index.vue
+// 添加
+
+<template>
+  <div id="idScss">SCSS</div>
+</template>
+
+<style lang="scss" scoped>
+#idScss {
+  width: 100%;
+  height: 50px;
+  background-color: $background-color;
+  color: $text-color;
+}
+</style>
+```

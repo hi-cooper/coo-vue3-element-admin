@@ -1,10 +1,10 @@
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from 'node:url';
 
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueJsx from '@vitejs/plugin-vue-jsx'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import vueJsx from '@vitejs/plugin-vue-jsx';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
-import path from 'path'
+import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -12,13 +12,23 @@ export default defineConfig({
     vue(),
     vueJsx(),
     createSvgIconsPlugin({
-      iconDirs: [path.resolve(process.cwd(), 'src/assets/icons')], // 指定icons路径
-      symbolId: 'icon-[dir]-[name]', // symbolId格式
+      iconDirs: [path.resolve(process.cwd(), 'src/assets/icons')], // 指锟斤拷icons路锟斤拷
+      symbolId: 'icon-[dir]-[name]', // symbolId锟斤拷式
     }),
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
-  }
-})
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  css: {
+    // CSS 棰勫鐞嗗櫒
+    preprocessorOptions: {
+      //define global scss variable
+      scss: {
+        javascriptEnabled: true,
+        additionalData: `@use "@/layouts/scss/index.scss" as *;`, // 榛樿scss鏂囦欢
+      },
+    },
+  },
+});
