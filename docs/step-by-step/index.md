@@ -1374,3 +1374,139 @@ export default apis;
 pnpm mock
 ```
 
+# 11 自定义SVG组件 (vite-plugin-svg-icons)
+
+> see; https://github.com/vbenjs/vite-plugin-svg-icons
+
+## 11.1 安装
+
+```shell
+pnpm add -D vite-plugin-svg-icons
+```
+
+## 11.2 配置
+
+- 创建svg文件存放路径：`src/assets/icons`
+
+- vite.config.ts
+
+```typescript
+// /vite.config.ts
+// 添加
+
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
+import path from 'path'
+
+export default () => {
+  return {
+    plugins: [
+        createSvgIconsPlugin({
+          iconDirs: [path.resolve(process.cwd(), 'src/assets/icons')], // 指定icons路径
+          symbolId: 'icon-[dir]-[name]', // symbolId格式
+        }),
+    ],
+  };
+};
+```
+
+- tsconfig.json
+
+```json
+// /tsconfig.json
+// 添加
+
+{
+  "compilerOptions": {
+    "types": ["vite-plugin-svg-icons/client"]
+  },
+}
+```
+
+- 全局注册
+
+```typescript
+// /src/main.ts
+
+import 'virtual:svg-icons-register';
+```
+
+- 组件声明
+
+```vue
+// /src/components/CooSvgIcon/index.vue
+// 新建
+
+<template>
+  <!--优先采用width和height。如果width/height未定义，则采用size-->
+  <svg aria-hidden="true" class="coo-svg-icon" :style="'width:' + (width ?? size) + ';height:' + (height ?? size)">
+    <use :xlink:href="symbolId" :fill="color" />
+  </svg>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+
+const props = defineProps({
+  prefix: {
+    type: String,
+    default: 'icon',
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+  color: {
+    type: String,
+    required: false,
+    default: '#333',
+  },
+  size: {
+    type: String,
+    required: false,
+    default: '1em',
+  },
+  width: {
+    type: String,
+    required: false,
+  },
+  height: {
+    type: String,
+    required: false,
+  },
+});
+
+const symbolId = computed(() => `#${props.prefix}-${props.name}`);
+</script>
+
+<style scoped>
+.coo-svg-icon {
+  overflow: hidden;
+  fill: currentColor;
+}
+</style>
+```
+
+## 11.3 示例
+
+- 上传svg至`/src/assets/icons`
+
+![](https://czmdi.cooperzhu.com/technology/vue/vue3-element-plushuan-jing-da-jian-step-by-step/10-3_1.svg)
+
+- 页面引用
+
+```vue
+// /src/testing/index.vue
+// 添加
+
+<template>
+    <CooSvgIcon name="logo" color="#FF0000" />
+    <CooSvgIcon name="menu-dict" color="#FF0000" />
+    <CooSvgIcon name="menu-language" color="#FF0000" size="32px" /><!-- 使用logo.svg重命名为language.svg -->
+    <CooSvgIcon name="basic-language" color="#FF0000" width="40px" height="64px" />
+</template>
+
+<script setup lang="ts">
+import CooSvgIcon from '@/components/CooSvgIcon/index.vue';
+</script>
+```
+

@@ -1,6 +1,7 @@
 import 'element-plus/theme-chalk/index.css';
 import './assets/main.css';
 
+import 'virtual:svg-icons-register';
 import ComponetService from '@/components/ComponetService';
 import { createApp } from 'vue';
 import StoreService from '@/stores/StoreService';
