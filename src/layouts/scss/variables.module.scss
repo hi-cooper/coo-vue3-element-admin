@@ -1,0 +1,6 @@
+// 导出 variables.module.scss 变量提供给TypeScript使用
+:export {
+  sidebarBackgroundcolor: $layout__sidebar__backgrount_color;
+  sidebarTextcolor: $layout__sidebar__text_color;
+  sidebarActivecolor: $layout__sidebar__active_color;
+}

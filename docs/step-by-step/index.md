@@ -2577,7 +2577,7 @@ function push() {
 </div>
                       ↓
 <div id="content-wrapper" class="content-wrapper">
-    <TwAppMain />
+    <CooAppMain />
 </div>
 ```
 
@@ -2685,3 +2685,9 @@ $text-color: #ffffff;
 }
 </style>
 ```
+
+# 15 Layout优化
+
+## 15.1 Layout优化
+
+详见代码
