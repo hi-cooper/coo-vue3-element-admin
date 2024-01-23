@@ -4,6 +4,7 @@
       <div :class="$style['hamburger-wrapper']" @click="appStore.toggleSidebar">
         <CooSvgIcon name="layouts-hamburger" :size="svgSize" :class="[{ [$style['is-active']]: appStore.sidebar.opened }, $style['hamburger']]" />
       </div>
+      <CooBreadcrumb v-if="appStore.screen.widthType !== ScreenWidthType.Small" />
     </div>
     <div :class="$style['header-action']">
       <span @click="toggle">
@@ -33,8 +34,10 @@
 
 <script setup lang="ts">
 import { useFullscreen } from '@vueuse/core';
+import CooBreadcrumb from './CooBreadcrumb.vue';
 import appStore from '@/stores/modules/appStore';
 import CooSvgIcon from '@/components/CooSvgIcon/index.vue';
+import { ScreenWidthType } from '@/types';
 
 const { isFullscreen, toggle } = useFullscreen();
 

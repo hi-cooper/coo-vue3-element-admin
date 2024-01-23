@@ -15,12 +15,12 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/testing',
+    path: '/_virtual/testing',
     component: DEFAULT_LAYOUT,
-    redirect: '/testing/index',
+    redirect: '/testing',
     children: [
       {
-        path: '/testing/index',
+        path: '/testing',
         name: 'testing',
         component: () => import('@/views/testing/index.vue'),
       },

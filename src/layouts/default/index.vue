@@ -223,6 +223,19 @@ const menus: IMenuItem[] = [
       },
     ],
   },
+  {
+    id: '16598651170467862',
+    title: '进阶示例',
+    icon: 'menu-dict',
+    children: [
+      {
+        id: '16598651170467860',
+        title: '自定义Breadcrumb',
+        path: '/advancedemo/breadcrumb',
+        icon: 'menu-dict',
+      },
+    ],
+  },
 ];
 </script>
 
