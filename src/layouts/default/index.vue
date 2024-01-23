@@ -10,9 +10,10 @@
       <div id="header-wrapper" class="header-wrapper">
         <div>
           <button v-if="appStore.screen.widthType !== ScreenWidthType.Small && appStore.sidebar.opened" @click="toggleSidebar">&lt;&lt;</button>
-          <button v-else @click="toggleSidebar">&gt;&gt;</button>
+          <button v-else @click="toggle">&gt;&gt;</button>
         </div>
-        <div>全屏 &nbsp;&nbsp;&nbsp;&nbsp;头像</div>
+        <button @click="toggle">全屏</button>
+        &nbsp;&nbsp;&nbsp;&nbsp;头像
       </div>
       <div id="content-wrapper" class="content-wrapper">
         <CooAppMain />
@@ -27,10 +28,12 @@ import CooSidebar from './components/CooSidebar/index.vue';
 import appStore from '@/stores/modules/appStore';
 import { ScreenWidthType } from '@/types';
 import CooAppMain from './components/CooAppMain/index.vue';
+import { useFullscreen } from '@vueuse/core';
 
 const smallMaxWidth = 768; // px
 const middleMaxWidth = 1200; // px
 const sidebarShortWidth = 54; // px
+const { toggle } = useFullscreen();
 
 function toggleSidebar() {
   var sidebar = document.getElementById('sidebar-wrapper');

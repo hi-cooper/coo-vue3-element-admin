@@ -2580,3 +2580,35 @@ function push() {
     <TwAppMain />
 </div>
 ```
+
+# 13 vueuse
+
+> see: https://vueuse.org/
+
+## 13.1 安装
+
+```shell
+pnpm add @vueuse/core
+```
+
+## 13.2 示例
+
+```html
+// /src/layouts/default/index.vue
+// 替换
+
+<template>
+    <div>全屏 &nbsp;&nbsp;&nbsp;&nbsp;头像</div>
+                         ↓
+    <div>
+        <button @click="toggle">全屏</button>
+        &nbsp;&nbsp;&nbsp;&nbsp;头像
+    </div>
+</template>
+
+// 添加
+<script setup lang="ts">
+    import { useFullscreen } from '@vueuse/core';
+    const { toggle } = useFullscreen();
+</script>
+```
