@@ -1233,3 +1233,144 @@ function testHttpApi() {
 }
 </script>
 ```
+
+# 10 Mock
+
+> see: http://mockjs.com/
+
+## 10.1 安装
+
+```shell
+pnpm add mockjs
+```
+
+## 10.2 配置
+
+- /src/mock/index.ts
+
+```typescript
+// /src/mock/index.ts
+// 新建
+
+import Mock from 'mockjs';
+import type { IMockParam } from './types';
+
+const modules = import.meta.glob<Record<string, unknown>>('./modules/**/*.ts', { eager: true });
+const allMockApis: IMockParam[] = [];
+
+Object.keys(modules).forEach((key) => {
+  const mod = modules[key].default || {}; // 仅支持export default
+  const modList = Array.isArray(mod) ? [...mod] : [mod];
+  allMockApis.push(...modList);
+});
+
+// 设置200-600毫秒延时请求数据
+Mock.setup({
+  timeout: '200-600',
+});
+
+for (const api of allMockApis) {
+  Mock.mock(new RegExp(api.url), api.method || 'get', api.response);
+}
+```
+
+- types
+
+```typescript
+import type { IHttpApiResponse } from '@/api/HttpApi/types';
+
+export interface IMockParam {
+  url: string;
+  method: string;
+  response<T>(option?: Record<string, unknown>): IHttpApiResponse<T>;
+}
+```
+
+- env.d.ts
+
+```typescript
+// /env.d.ts
+// 添加
+
+declare module 'mockjs';
+```
+
+## 10.3 创建mock环境
+
+- .env.mock
+
+```properties
+# /.env.mock
+# 新建 
+# mock环境
+
+# 自定义变量，必须以VITE_开头
+VITE_APP_TITLE = 'coo-vue3-element-admin'
+VITE_HTTP_API_BASE_URL = 'http://localhost:3000/mock'
+```
+
+- package.json
+
+```json
+// /package.json
+// 添加
+
+{
+  "scripts": {
+    "mock": "vite --mode mock",
+  }
+}
+```
+
+- 根据启动环境加载mock配置
+
+```typescript
+// /src/main.ts
+// 添加
+
+if (import.meta.env.MODE === 'mock') {
+    import('@/mock/index');
+}
+```
+
+## 10.4 使用规则
+
+在`/src/mock/modules`目录下创建mock配置（参见10.5示例）。
+
+## 10.5 示例
+
+```typescript
+// /src/mock/modules/user.ts
+// 新建
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import type { IHttpApiResponse } from '@/api/HttpApi/types';
+import type { IMockParam } from '../types';
+
+const apis: IMockParam[] = [
+  {
+    url: '/v1/test/create',
+    method: 'post',
+    response: function (option?: Record<string, unknown>): IHttpApiResponse<any> {
+      return {
+        requestId: '1',
+        code: 200,
+        message: '成功',
+        data: {
+          userId: 1,
+          username: 'Cooper',
+        },
+      };
+    },
+  },
+];
+
+export default apis;
+```
+
+## 10.6 启动
+
+```shell
+pnpm mock
+```
+

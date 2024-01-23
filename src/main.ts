@@ -8,6 +8,10 @@ import RouterService from '@/router/RouterService';
 
 import App from './App.vue';
 
+if (import.meta.env.MODE === 'mock') {
+    import('@/mock/index');
+}
+
 const app = createApp(App);
 
 ComponetService.setup(app);
