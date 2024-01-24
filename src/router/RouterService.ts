@@ -1,7 +1,9 @@
 import type { RouteRecordRaw } from 'vue-router';
 import type { App } from 'vue';
 import { createRouter, createWebHashHistory } from 'vue-router';
+import RouterGuard from './guard/index';
 import allRoutes from './route/index';
+import whiteListRoutes from './whiteListRoutes';
 
 const router = createRouter({
   routes: allRoutes as RouteRecordRaw[],
@@ -11,11 +13,17 @@ const router = createRouter({
 
 function setup(app: App<Element>) {
   app.use(router);
+  RouterGuard.setup(router);
+}
+
+function isWhiteList(path: string): boolean {
+  return whiteListRoutes.includes(path);
 }
 
 const RouterService = {
   router,
   setup,
+  isWhiteList,
 };
 
 export { router };

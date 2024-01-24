@@ -38,6 +38,9 @@ import CooBreadcrumb from './CooBreadcrumb.vue';
 import appStore from '@/stores/modules/appStore';
 import CooSvgIcon from '@/components/CooSvgIcon/index.vue';
 import { ScreenWidthType } from '@/types';
+import { RoutePathEnum } from '@/router/RoutePathEnum';
+import RouterService from '@/router/RouterService';
+import userStore from '@/stores/modules/userStore';
 
 const { isFullscreen, toggle } = useFullscreen();
 
@@ -51,8 +54,8 @@ const handleCommand = (command: string | number | object) => {
 };
 
 function logout() {
-  // userStore.logout();
-  // RouterService.router.push(RoutePathEnum.LOGIN);
+  userStore.logout();
+  RouterService.router.push(RoutePathEnum.LOGIN);
 }
 </script>
 

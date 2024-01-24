@@ -4,6 +4,10 @@ import { RoutePathEnum } from '@/router/RoutePathEnum';
 
 const routes: RouteRecordRaw[] = [
   {
+    path: RoutePathEnum.LOGIN,
+    component: () => import('@/views/login/index.vue'),
+  },
+  {
     path: '/',
     component: DEFAULT_LAYOUT,
     redirect: RoutePathEnum.HOME,
