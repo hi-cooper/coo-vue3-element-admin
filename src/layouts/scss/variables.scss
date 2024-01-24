@@ -1,0 +1,30 @@
+// screen_width
+// @media (min-width: 768px)
+// @media (min-width: 992px)
+// @media (min-width: 1200px)
+// @media (max-width: 767px)
+$screen_width__big: 1200px;
+$screen_width__middle: 992px;
+$screen_width__small: 768px;
+
+$dark_backgrount_color_primary: #001529;
+$dark_backgrount_color_secondary: #2d3a4b;
+$dark_color: #ffffff;
+
+$light_backgrount_color_primary: #eeeeee;
+
+// main layout
+$layout__sidebar_width__closed: 54px;
+$layout__sidebar_width__opened: 210px;
+$layout__sidebar__transition_duration: 0.28s;
+$layout__header_height: 40px;
+
+$layout__sidebar__backgrount_color: $dark_backgrount_color_primary;
+$layout__sidebar__text_color: #b7bdc3;
+$layout__sidebar__active_color: #ffffff;
+
+$layout__maincontent__backgrount_color: #f2f3f5;
+$content__backgrount_color: #ffffff;
+
+// other
+$hover-background-color: #f6f6f6;
