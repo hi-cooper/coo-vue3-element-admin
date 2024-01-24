@@ -26,5 +26,19 @@ const desensitiveRoutes: RouteRecordRaw[] = [
   },
 ];
 
-const routes: RouteRecordRaw[] = [...desensitiveRoutes];
+const coodockRoutes: RouteRecordRaw[] = [
+  {
+    path: '/_virtual/component/coodock',
+    component: DEFAULT_LAYOUT,
+    redirect: '/component/coodock',
+    children: [
+      {
+        path: '/component/coodock',
+        component: () => import('@/views/component/coodock/index.vue'),
+      },
+    ],
+  },
+];
+
+const routes: RouteRecordRaw[] = [...desensitiveRoutes, ...coodockRoutes];
 export default routes;

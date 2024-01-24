@@ -260,6 +260,19 @@ const menus: IMenuItem[] = [
           },
         ],
       },
+      {
+        id: '21026387389591565',
+        title: 'CooDock',
+        icon: 'menu-dict',
+        children: [
+          {
+            id: '21026387389591567',
+            title: '基本示例',
+            path: '/component/coodock',
+            icon: 'menu-dict',
+          },
+        ],
+      },
     ],
   },
 ];
