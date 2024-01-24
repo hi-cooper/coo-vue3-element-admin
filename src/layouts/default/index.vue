@@ -236,6 +236,32 @@ const menus: IMenuItem[] = [
       },
     ],
   },
+  {
+    id: '21026387389591562',
+    title: '自定义组件',
+    icon: 'menu-dict',
+    children: [
+      {
+        id: '21026387385397263',
+        title: '脱敏组件',
+        icon: 'menu-dict',
+        children: [
+          {
+            id: '21026387385397264',
+            title: 'CooText',
+            path: '/component/desensitive/cootext',
+            icon: 'menu-dict',
+          },
+          {
+            id: '21026387385397268',
+            title: 'CooInput',
+            path: '/component/desensitive/cooinput',
+            icon: 'menu-dict',
+          },
+        ],
+      },
+    ],
+  },
 ];
 </script>
 
